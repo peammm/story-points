@@ -14,7 +14,12 @@
   const scores = [1, 2, 3, 5, 8, 13, 21];
   
   function connectWebSocket() {
-    const wsUrl = import.meta.env.VITE_WS_URL;
+    let wsUrl = import.meta.env.VITE_WS_URL;
+    if (name.trim() === 'viewer') {
+      const urlWithParams = new URL(wsUrl);
+      urlWithParams.searchParams.set('mode', 'viewer');
+      wsUrl = urlWithParams.toString();
+    }
     ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
@@ -28,8 +33,8 @@
         showResults = message.data.showResults;
         totalPlayers = message.data.totalPlayers;
       } else if (message.type === 'reset') {
-        allScores = message.data.scores;
-        showResults = message.data.showResults;
+        allScores = {};
+        showResults = false;
         totalPlayers = message.data.totalPlayers;
         selectedScore = null;
       }
@@ -44,10 +49,12 @@
   onMount(() => {
     const savedName = localStorage.getItem('playerName');
     if (savedName) {
+      if (savedName === 'viewer') {
+        activeTab = 'display';
+      }
       name = savedName;
       isNameSet = true;
     }
-    
     connectWebSocket();
   });
   
@@ -63,12 +70,22 @@
   
   function handleNameSubmit(e) {
     e.preventDefault();
-    if (name.trim()) {
-      localStorage.setItem('playerName', name);
+
+    const buttonClicked = e.submitter ? e.submitter.name : 'submit';
+
+    if (buttonClicked === 'submit') {
+      if (name.trim() && name !== 'viewer') {
+        localStorage.setItem('playerName', name);
+        isNameSet = true;
+      }
+    } else if (buttonClicked === 'result') {
+      localStorage.setItem('playerName', 'viewer');
       isNameSet = true;
+      name = 'viewer'
+      activeTab = 'display';
     }
   }
-  
+
   function handleScoreSelect(score) {
     selectedScore = score;
     sendMessage({
@@ -81,6 +98,7 @@
   function handleShowResults() {
     sendMessage({
       type: 'show_results',
+      name,
       show: true
     });
   }
@@ -88,7 +106,8 @@
   function handleReset() {
     selectedScore = null;
     sendMessage({
-      type: 'reset'
+      type: 'reset',
+      name
     });
   }
   
@@ -114,8 +133,11 @@
             bind:value={name}
             class="w-full px-4 py-2 border rounded-md"
           />
-          <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          <button name="submit" type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
             เริ่มต้น
+          </button>
+          <button name="result" type="submit" class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+            ดูผลโหวต
           </button>
         </form>
       </div>
@@ -133,7 +155,10 @@
           🔄 เริ่มใหม่
         </button>
         <button 
-          on:click={() => isNameSet = false}
+          on:click={() => {
+            isNameSet = false;
+            name = null;
+          }}
           class="px-4 py-2 border rounded-md hover:bg-gray-100"
         >
           ✏️ เปลี่ยนชื่อ
@@ -143,12 +168,14 @@
 
     <div class="border-b">
       <nav class="flex space-x-4">
+        {#if name != 'viewer'}
         <button
           class="px-4 py-2 {activeTab === 'player' ? 'border-b-2 border-blue-600' : ''}"
           on:click={() => activeTab = 'player'}
         >
           👥 เลือกคะแนน
         </button>
+        {/if}
         <button
           class="px-4 py-2 {activeTab === 'display' ? 'border-b-2 border-blue-600' : ''}"
           on:click={() => activeTab = 'display'}
