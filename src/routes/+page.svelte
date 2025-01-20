@@ -205,10 +205,10 @@
         {#if !showResults}
           <div class="bg-white rounded-lg shadow-md">
             <div class="p-6">
-              <h3 class="text-xl font-semibold mb-4">กำลังรอผู้เล่นโหวต...</h3>
+              <h3 class="text-xl font-semibold mb-4">กำลังรอโหวต...</h3>
               <div class="space-y-4">
                 <div class="flex justify-between items-center">
-                  <span>👥 จำนวนผู้เล่นทั้งหมด:</span>
+                  <span>👥 จำนวนทั้งหมด:</span>
                   <span class="font-semibold">{totalPlayers}</span>
                 </div>
                 <div class="flex justify-between items-center">
