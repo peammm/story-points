@@ -27,6 +27,8 @@
         allScores = message.data.scores;
         showResults = message.data.showResults;
         totalPlayers = message.data.totalPlayers;
+      } else if (message.type === 'reset') {
+        selectedScore = null;
       }
     };
 
