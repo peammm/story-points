@@ -14,7 +14,8 @@
   const scores = [1, 2, 3, 5, 8, 13, 21];
   
   function connectWebSocket() {
-    ws = new WebSocket('wss://ws.peam.my');
+    const wsUrl = import.meta.env.VITE_WS_URL;
+    ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
       isConnected = true;
