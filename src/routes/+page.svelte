@@ -1,108 +1,101 @@
 <script>
-    import { onMount, onDestroy } from 'svelte';
-    
-    let ws;
-    let name = '';
-    let isNameSet = false;
-    let selectedScore = null;
-    let allScores = {};
-    let showResults = false;
-    let activeTab = 'player';
-    let totalPlayers = 0;
-    let isConnected = false;
-    
-    const scores = [1, 2, 3, 5, 8, 13, 21];
-    
-    function connectWebSocket() {
-      ws = new WebSocket('wss://ws.peam.my');
-
-      ws.onopen = () => {
-        isConnected = true;
-      };
-
-      ws.onmessage = (event) => {
-        const message = JSON.parse(event.data);
-        if (message.type === 'state') {
-          allScores = message.data.scores;
-          showResults = message.data.showResults;
-          totalPlayers = message.data.totalPlayers;
-        }
-      };
+  import { onMount, onDestroy } from 'svelte';
   
-      ws.onclose = () => {
-        isConnected = false;
-        // Try to reconnect after a delay
-        setTimeout(connectWebSocket, 1000);
-      };
-    }
-    
-    onMount(() => {
-      const savedName = localStorage.getItem('playerName');
-      if (savedName) {
-        name = savedName;
-        isNameSet = true;
-      }
-      
-      connectWebSocket();
-    });
-    
-    onDestroy(() => {
-      if (ws) ws.close();
-    });
-    
-    function sendMessage(message) {
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify(message));
-      }
-    }
-    
-    function handleNameSubmit(e) {
-      e.preventDefault();
-      if (name.trim()) {
-        localStorage.setItem('playerName', name);
-        isNameSet = true;
-      }
-    }
-    
-    function handleScoreSelect(score) {
-      selectedScore = score;
-      sendMessage({
-        type: 'score',
-        name,
-        score
-      });
-    }
-    
-    function handleShowResults() {
-      sendMessage({
-        type: 'show_results',
-        show: true
-      });
-    }
-    
-    function handleReset() {
-      selectedScore = null;
-      sendMessage({
-        type: 'reset'
-      });
-    }
-    
-    function handleTotalPlayersChange(e) {
-      const count = parseInt(e.target.value) || 0;
-      sendMessage({
-        type: 'total_players',
-        count
-      });
-    }
-    
-    $: votedCount = Object.keys(allScores).length;
-    $: remainingVotes = totalPlayers - votedCount;
-    $: average = votedCount > 0 
-      ? (Object.values(allScores).reduce((a, b) => a + b, 0) / votedCount).toFixed(1)
-      : 0;
-  </script>
+  let ws;
+  let name = '';
+  let isNameSet = false;
+  let selectedScore = null;
+  let allScores = {};
+  let showResults = false;
+  let activeTab = 'player';
+  let totalPlayers = 0;
+  let isConnected = false;
+  
+  const scores = [1, 2, 3, 5, 8, 13, 21];
+  
+  function connectWebSocket() {
+    ws = new WebSocket('wss://ws.peam.my');
 
-<!-- แสดงสถานะการเชื่อมต่อ -->
+    ws.onopen = () => {
+      isConnected = true;
+    };
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      if (message.type === 'state') {
+        allScores = message.data.scores;
+        showResults = message.data.showResults;
+        totalPlayers = message.data.totalPlayers;
+      }
+    };
+
+    ws.onclose = () => {
+      isConnected = false;
+      // Try to reconnect after a delay
+      setTimeout(connectWebSocket, 1000);
+    };
+  }
+  
+  onMount(() => {
+    const savedName = localStorage.getItem('playerName');
+    if (savedName) {
+      name = savedName;
+      isNameSet = true;
+    }
+    
+    connectWebSocket();
+  });
+  
+  onDestroy(() => {
+    if (ws) ws.close();
+  });
+  
+  function sendMessage(message) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(message));
+    }
+  }
+  
+  function handleNameSubmit(e) {
+    e.preventDefault();
+    if (name.trim()) {
+      localStorage.setItem('playerName', name);
+      isNameSet = true;
+    }
+  }
+  
+  function handleScoreSelect(score) {
+    selectedScore = score;
+    sendMessage({
+      type: 'score',
+      name,
+      score
+    });
+  }
+  
+  function handleShowResults() {
+    sendMessage({
+      type: 'show_results',
+      show: true
+    });
+  }
+  
+  function handleReset() {
+    selectedScore = null;
+    sendMessage({
+      type: 'reset'
+    });
+  }
+  
+  $: votedCount = Object.keys(allScores).length;
+  $: remainingVotes = totalPlayers - votedCount;
+  $: average = votedCount > 0 
+    ? (Object.values(allScores).reduce((a, b) => a + b, 0) / votedCount).toFixed(1)
+    : 0;
+  
+  $: canShowResults = votedCount === totalPlayers;
+</script>
+
 {#if !isConnected}
 <div class="fixed top-0 left-0 right-0 bg-red-500 text-white p-2 text-center">
     กำลังเชื่อมต่อกับเซิร์ฟเวอร์...
@@ -179,8 +172,7 @@
           <button 
             class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400"
             on:click={handleShowResults}
-            disabled={!selectedScore}
-          >
+            disabled={!canShowResults}>
             แสดงผลคะแนนทั้งหมด
           </button>
         </div>
@@ -201,24 +193,15 @@
       {/if}
     {:else}
       <div class="space-y-6">
-        <!-- <div class="flex justify-between items-center">
-          <div class="flex items-center gap-2">
-            <span>👥 จำนวนทั้งหมด: {totalPlayers}</span>
-          </div>
-          <input 
-            type="number"
-            min="0"
-            class="w-24 px-2 py-1 border rounded-md"
-            value={totalPlayers}
-            on:input={handleTotalPlayersChange}
-          />
-        </div> -->
-
         {#if !showResults}
           <div class="bg-white rounded-lg shadow-md">
             <div class="p-6">
               <h3 class="text-xl font-semibold mb-4">กำลังรอผู้เล่นโหวต...</h3>
               <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                  <span>👥 จำนวนผู้เล่นทั้งหมด:</span>
+                  <span class="font-semibold">{totalPlayers}</span>
+                </div>
                 <div class="flex justify-between items-center">
                   <span>โหวตแล้ว:</span>
                   <span class="font-semibold">{votedCount} คน</span>
@@ -241,10 +224,6 @@
             <div class="p-6">
               <h3 class="text-xl font-semibold mb-4">ผลคะแนนทั้งหมด</h3>
               <div class="space-y-4">
-                <!-- <div class="flex justify-between items-center border-b pb-2">
-                  <span>คะแนนเฉลี่ย:</span>
-                  <span class="font-semibold">{average}</span>
-                </div> -->
                 {#each Object.entries(allScores) as [playerName, score]}
                   <div class="flex justify-between items-center">
                     <span>{playerName}</span>
