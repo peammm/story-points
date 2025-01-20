@@ -145,8 +145,8 @@
   </div>
 {:else}
   <div class="max-w-2xl mx-auto mt-8 p-4 space-y-6">
-    <div class="flex justify-between items-center">
-      <h2 class="text-2xl font-bold">สวัสดี {name}</h2>
+    <div>
+      <h2 class="text-2xl font-bold">สวัสดี {name}</h2><br>
       <div class="space-x-4">
         <button 
           on:click={handleReset}
