@@ -124,12 +124,20 @@
   <div class="max-w-2xl mx-auto mt-8 p-4 space-y-6">
     <div class="flex justify-between items-center">
       <h2 class="text-2xl font-bold">สวัสดี {name}</h2>
-      <button 
-        on:click={handleReset}
-        class="px-4 py-2 border rounded-md hover:bg-gray-100"
-      >
-        🔄 เริ่มใหม่
-      </button>
+      <div class="space-x-4">
+        <button 
+          on:click={handleReset}
+          class="px-4 py-2 border rounded-md hover:bg-gray-100"
+        >
+          🔄 เริ่มใหม่
+        </button>
+        <button 
+          on:click={() => isNameSet = false}
+          class="px-4 py-2 border rounded-md hover:bg-gray-100"
+        >
+          ✏️ เปลี่ยนชื่อ
+        </button>
+      </div>
     </div>
 
     <div class="border-b">
