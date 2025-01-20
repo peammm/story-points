@@ -32,7 +32,6 @@
 
     ws.onclose = () => {
       isConnected = false;
-      // Try to reconnect after a delay
       setTimeout(connectWebSocket, 1000);
     };
   }
@@ -90,10 +89,6 @@
   
   $: votedCount = Object.keys(allScores).length;
   $: remainingVotes = totalPlayers - votedCount;
-  $: average = votedCount > 0 
-    ? (Object.values(allScores).reduce((a, b) => a + b, 0) / votedCount).toFixed(1)
-    : 0;
-  
   $: canShowResults = votedCount === totalPlayers;
 </script>
 
