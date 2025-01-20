@@ -14,7 +14,7 @@
     const scores = [1, 2, 3, 5, 8, 13, 21];
     
     function connectWebSocket() {
-      ws = new WebSocket('ws://ws.peam.my');
+      ws = new WebSocket('wss://ws.peam.my');
 
       ws.onopen = () => {
         isConnected = true;
